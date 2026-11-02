@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JM98MAX Studio — Hardware DSP & 10-Band PEQ</title>
+  <meta name="description" content="Hardware-safe 10-Band Parametric EQ & DSP Studio for JCALLY JM98MAX (CS43198 + Savitech Bridge) via WebHID." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="bg-black text-silver">
+  <div class="studio-container">
+    
+    <!-- Top Navigation Header -->
+    <header class="studio-header">
+      <div class="brand-group">
+        <div class="logo-mark">
+          <span class="gold-accent">JM</span>98
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">JM98MAX <span class="gold-text">STUDIO</span></h1>
+          <p class="brand-subtitle">CIRRUS LOGIC CS43198 &bull; SAVITECH HARDWARE PEQ</p>
+        </div>
+      </div>
+
+      <div class="device-dock">
+        <div class="device-status-pill" id="deviceStatusPill">
+          <span class="status-indicator-dot" id="statusDot"></span>
+          <div class="status-labels">
+            <span class="status-state" id="statusState">DISCONNECTED</span>
+            <span class="status-details" id="statusDetails">VID 0x0666 &bull; PID 0x0881</span>
+          </div>
+        </div>
+        <button id="btnConnect" class="btn-primary-titanium">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v6m0 8v6M2 12h6m8 0h6"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <span id="btnConnectText">Connect DAC</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <main class="studio-workspace">
+      
+      <!-- Upper Section: Interactive Logarithmic Curve & Master Rack -->
+      <section class="rack-card curve-section">
+        <div class="rack-card-header">
+          <div class="header-tag">
+            <span class="gold-diamond">&diams;</span>
+            <span>TRANSFER FUNCTION &bull; 96kHz BIQUAD ENGINE</span>
+          </div>
+          <div class="curve-actions">
+            <button id="btnResetCurve" class="btn-micro" title="Reset all bands to flat (0 dB)">Flat Reset</button>
+            <button id="btnAutoEqImport" class="btn-micro btn-gold-ghost" title="Import AutoEQ or Squiglink text">Import AutoEq</button>
+            <button id="btnExportJson" class="btn-micro" title="Export EQ configuration as JSON">Export JSON</button>
+          </div>
+        </div>
+
+        <div class="canvas-wrapper">
+          <canvas id="eqCanvas" width="1200" height="340"></canvas>
+          <div class="canvas-crosshair-tooltip" id="canvasTooltip"></div>
+        </div>
+
+        <div class="curve-legend">
+          <span class="legend-item"><span class="legend-color gold-line"></span> Master Curve</span>
+          <span class="legend-item"><span class="legend-color silver-dash"></span> 0 dB Reference</span>
+          <span class="legend-item"><span class="legend-color dot-handle"></span> Band Nodes (1-10)</span>
+          <span class="legend-meta" id="sampleRateMeta">Processing: 96 kHz Q30 Signed Fixed-Point</span>
+        </div>
+      </section>
+
+      <!-- Master Control Strip & Preset Bar -->
+      <section class="master-toolbar">
+        <div class="presets-group">
+          <div class="preset-meta-row">
+            <span class="toolbar-label">XBEAST DSP PRESETS</span>
+            <div class="category-tabs" id="categoryTabs">
+              <button class="cat-tab active" data-cat="iems">IEMs</button>
+              <button class="cat-tab" data-cat="headphones">Headphones</button>
+              <button class="cat-tab" data-cat="speakers">Speakers</button>
+              <button class="cat-tab" data-cat="ref">Reference</button>
+            </div>
+          </div>
+          <div class="preset-pills" id="presetPillsContainer">
+            <!-- Populated dynamically based on category -->
+          </div>
+        </div>
+
+        <div class="master-sliders-group">
+          <div class="preamp-control">
+            <div class="slider-label-row">
+              <span class="toolbar-label">PREAMP GAIN</span>
+              <span class="gold-num" id="preampVal">0.0 dB</span>
+            </div>
+            <input type="range" id="preampSlider" min="-32" max="15" step="0.5" value="-3.5" class="gold-range" />
+          </div>
+
+          <div class="hardware-sync-dock">
+            <div class="toggle-group" title="Sync live changes to DAC RAM as you drag">
+              <label class="switch">
+                <input type="checkbox" id="autoSyncCheck" checked />
+                <span class="switch-slider"></span>
+              </label>
+              <span class="toggle-label">Auto-Sync</span>
+            </div>
+
+            <button id="btnSyncRam" class="btn-gold-action" title="Push all 10 biquads to volatile DSP RAM">
+              <svg class="icon-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+              </svg>
+              <span>Sync to DAC (RAM)</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10-Band Physical Equalizer Channel Rack -->
+      <section class="rack-card bands-rack">
+        <div class="rack-card-header">
+          <div class="header-tag">
+            <span class="gold-diamond">&diams;</span>
+            <span>10-CHANNEL HARDWARE BIQUAD PEQ RACK</span>
+          </div>
+          <div class="bands-rack-hint">
+            <span>Double-click any slider to zero &bull; Sliders apply to live DSP</span>
+          </div>
+        </div>
+
+        <div class="channels-grid" id="channelsContainer">
+          <!-- Populated dynamically by app.js (10 bands) -->
+        </div>
+      </section>
+
+      <!-- Safety & Architecture Guide Footer Card -->
+      <section class="rack-card safety-panel">
+        <div class="safety-content">
+          <div class="safety-icon-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="m9 12 2 2 4-4"/>
+            </svg>
+          </div>
+          <div class="safety-text">
+            <h3>Hardware-Safe RAM Architecture</h3>
+            <p>
+              This studio syncs your 10-band biquad filters exclusively into the Savitech controller's high-speed <strong>DSP RAM buffer</strong>. 
+              It deliberately avoids touching the non-volatile parameter flash sector, ensuring your <strong>physical hardware EQ button</strong> 
+              and factory preset rotation remains 100% operational with zero brick risk.
+            </p>
+          </div>
+          <div class="safety-specs">
+            <div class="spec-cell">
+              <span class="spec-label">CHIPSET</span>
+              <span class="spec-val">Cirrus CS43198</span>
+            </div>
+            <div class="spec-cell">
+              <span class="spec-label">USB BRIDGE</span>
+              <span class="spec-val">Savitech WalkPlay</span>
+            </div>
+            <div class="spec-cell">
+              <span class="spec-label">HID REPORT</span>
+              <span class="spec-val">0x4B (75)</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- AutoEQ / Squiglink Import Modal -->
+    <div class="modal-overlay" id="importModal" style="display: none;">
+      <div class="modal-window">
+        <div class="modal-header">
+          <div class="header-tag">
+            <span class="gold-diamond">&diams;</span>
+            <span>IMPORT AUTOEQ / SQUIGLINK PROFILE</span>
+          </div>
+          <button class="btn-close" id="btnCloseModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-instruction">
+            Paste standard parametric EQ text exported from AutoEq, Squiglink, Crinacle, Oratory1990, or Peace EQ. Up to 10 bands will be parsed and loaded:
+          </p>
+          <textarea id="importTextArea" placeholder="Preamp: -4.2 dB&#10;Filter 1: ON PK Fc 32 Hz Gain 4.5 dB Q 1.41&#10;Filter 2: ON LSQ Fc 105 Hz Gain 3.0 dB Q 0.71&#10;Filter 3: ON PK Fc 2500 Hz Gain -2.0 dB Q 2.00..."></textarea>
+          <div class="modal-actions">
+            <button id="btnCancelModal" class="btn-micro">Cancel</button>
+            <button id="btnApplyImport" class="btn-gold-action">Parse & Load Profile</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
