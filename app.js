@@ -48,24 +48,28 @@ const XBEAST_PRESETS = {
     name: "Balanced",
     category: "iems",
     preamp: -9.0,
+    dynamicPreamp: -4.0,
     gains: [2.6, 6.9, 5.7, 1.3, -2.2, -1.5, 2.3, -2.6, -0.8, 3.8]
   },
   "iem-punchy": {
     name: "Punchy Bass",
     category: "iems",
     preamp: -11.0,
+    dynamicPreamp: -5.5,
     gains: [4.3, 9.0, 6.5, 1.3, -2.2, -1.5, 2.3, -0.7, -0.5, 3.8]
   },
   "iem-heavy": {
     name: "Heavy Bass",
     category: "iems",
     preamp: -14.0,
+    dynamicPreamp: -6.5,
     gains: [12.0, 12.0, 12.0, 1.3, -2.2, -1.5, 2.3, 1.3, 1.8, 3.8]
   },
   "iem-extreme": {
     name: "Extreme Sub-Bass",
     category: "iems",
     preamp: -22.0,
+    dynamicPreamp: -8.0,
     gains: [15.0, 20.0, 17.0, 1.3, -2.2, -1.5, 2.3, 1.9, 3.0, 3.8]
   },
 
@@ -74,33 +78,29 @@ const XBEAST_PRESETS = {
     name: "Balanced",
     category: "headphones",
     preamp: -9.0,
+    dynamicPreamp: -4.0,
     gains: [2.6, 6.9, 5.7, 1.3, -2.2, -1.5, 2.3, 0.2, -0.2, 3.8]
   },
   "hp-punchy": {
     name: "Punchy Bass",
     category: "headphones",
     preamp: -11.0,
+    dynamicPreamp: -5.5,
     gains: [4.3, 9.0, 6.5, 1.3, -2.2, -1.5, 2.3, 0.9, 1.0, 3.8]
   },
   "hp-heavy": {
     name: "Heavy Bass",
     category: "headphones",
     preamp: -14.0,
+    dynamicPreamp: -6.5,
     gains: [12.0, 12.0, 12.0, 1.3, -2.2, -1.5, 2.3, 2.7, 3.0, 3.8]
   },
   "hp-extreme": {
     name: "Extreme Sub-Bass",
     category: "headphones",
     preamp: -22.0,
+    dynamicPreamp: -8.0,
     gains: [15.0, 20.0, 17.0, 1.3, -2.2, -1.5, 2.3, 2.7, 3.0, 3.8]
-  },
-
-  // --- Built-in Speakers ---
-  "speakers-clarity": {
-    name: "Rich Clarity",
-    category: "speakers",
-    preamp: 0.0,
-    gains: [0.8, 5.9, 2.1, 0.7, 3.5, 4.6, 4.8, 4.3, 2.5, 0.0]
   },
 
   // --- Reference ---
@@ -108,19 +108,21 @@ const XBEAST_PRESETS = {
     name: "Flat (0 dB)",
     category: "ref",
     preamp: 0.0,
+    dynamicPreamp: 0.0,
     gains: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   }
 };
 
 // --- Application State ---
 let currentBands = JSON.parse(JSON.stringify(DEFAULT_BANDS));
-let preampGain = -11.0; // Default to Punchy Bass mathematical headroom (-11.0 dB)
+let preampGain = -5.5; // Default to Streaming Loud (-5.5 dB)
 let activeDevice = null;
 let autoSyncEnabled = true;
 let syncDebounceTimer = null;
 let draggingNodeIndex = null;
 let activeCategory = "iems";
 let activePresetKey = "iem-punchy";
+let headroomMode = localStorage.getItem("jm98max_headroom_mode") || "dynamic"; // "dynamic" (Loud) or "strict" (Safe)
 
 // --- DOM References ---
 const btnConnect = document.getElementById("btnConnect");
@@ -133,6 +135,10 @@ const eqCanvas = document.getElementById("eqCanvas");
 const canvasTooltip = document.getElementById("canvasTooltip");
 const preampSlider = document.getElementById("preampSlider");
 const preampVal = document.getElementById("preampVal");
+const btnHeadroomDynamic = document.getElementById("btnHeadroomDynamic");
+const btnHeadroomStrict = document.getElementById("btnHeadroomStrict");
+const headroomDynamicVal = document.getElementById("headroomDynamicVal");
+const headroomStrictVal = document.getElementById("headroomStrictVal");
 const autoSyncCheck = document.getElementById("autoSyncCheck");
 const btnSyncRam = document.getElementById("btnSyncRam");
 const btnResetCurve = document.getElementById("btnResetCurve");
@@ -737,6 +743,38 @@ function renderPresetPills(category) {
   });
 }
 
+function updateHeadroomButtonsUI() {
+  if (!btnHeadroomDynamic || !btnHeadroomStrict) return;
+  btnHeadroomDynamic.classList.toggle("active", headroomMode === "dynamic");
+  btnHeadroomStrict.classList.toggle("active", headroomMode === "strict");
+}
+
+function updateHeadroomLabels() {
+  const preset = XBEAST_PRESETS[activePresetKey];
+  if (!preset) return;
+  const dyn = preset.dynamicPreamp !== undefined ? preset.dynamicPreamp : preset.preamp;
+  const str = preset.preamp;
+  if (headroomDynamicVal) headroomDynamicVal.textContent = `${dyn > 0 ? "+" : ""}${dyn.toFixed(1)} dB`;
+  if (headroomStrictVal) headroomStrictVal.textContent = `${str > 0 ? "+" : ""}${str.toFixed(1)} dB`;
+}
+
+function setHeadroomMode(mode) {
+  headroomMode = mode;
+  localStorage.setItem("jm98max_headroom_mode", mode);
+  updateHeadroomButtonsUI();
+
+  const preset = XBEAST_PRESETS[activePresetKey];
+  if (preset) {
+    preampGain = (mode === "dynamic" && preset.dynamicPreamp !== undefined)
+      ? preset.dynamicPreamp
+      : preset.preamp;
+    preampSlider.value = preampGain;
+    preampVal.textContent = `${preampGain > 0 ? "+" : ""}${preampGain.toFixed(1)} dB`;
+    drawFrequencyResponse();
+    triggerAutoSync();
+  }
+}
+
 function applyPreset(presetKey) {
   const preset = XBEAST_PRESETS[presetKey];
   if (!preset) return;
@@ -753,10 +791,15 @@ function applyPreset(presetKey) {
     b.enabled = true;
   });
 
-  // Apply listening preamp headroom
-  preampGain = preset.preamp;
+  // Apply listening preamp headroom based on active headroomMode
+  preampGain = (headroomMode === "dynamic" && preset.dynamicPreamp !== undefined)
+    ? preset.dynamicPreamp
+    : preset.preamp;
   preampSlider.value = preampGain;
   preampVal.textContent = `${preampGain > 0 ? "+" : ""}${preampGain.toFixed(1)} dB`;
+
+  updateHeadroomLabels();
+  updateHeadroomButtonsUI();
 
   updateAllBandsUI();
   drawFrequencyResponse();
@@ -907,6 +950,17 @@ function initApp() {
   renderChannelsGrid();
   renderPresetPills(activeCategory);
   applyPreset(activePresetKey);
+
+  // Initialize Headroom Selector
+  updateHeadroomLabels();
+  updateHeadroomButtonsUI();
+
+  if (btnHeadroomDynamic) {
+    btnHeadroomDynamic.addEventListener("click", () => setHeadroomMode("dynamic"));
+  }
+  if (btnHeadroomStrict) {
+    btnHeadroomStrict.addEventListener("click", () => setHeadroomMode("strict"));
+  }
 
   // Connect Button
   btnConnect.addEventListener("click", () => {

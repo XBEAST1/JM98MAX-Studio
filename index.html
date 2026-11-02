@@ -28,6 +28,13 @@
       </div>
 
       <div class="device-dock">
+        <a href="https://github.com/XBEAST1/JM98MAX-Studio" target="_blank" rel="noopener noreferrer" class="btn-github-pill" title="View Source on GitHub">
+          <svg class="icon-github" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span class="github-label">Open Source</span>
+          <span class="github-heart">❤️</span>
+        </a>
         <div class="device-status-pill" id="deviceStatusPill">
           <span class="status-indicator-dot" id="statusDot"></span>
           <div class="status-labels">
@@ -83,7 +90,6 @@
             <div class="category-tabs" id="categoryTabs">
               <button class="cat-tab active" data-cat="iems">IEMs</button>
               <button class="cat-tab" data-cat="headphones">Headphones</button>
-              <button class="cat-tab" data-cat="speakers">Speakers</button>
               <button class="cat-tab" data-cat="ref">Reference</button>
             </div>
           </div>
@@ -96,9 +102,19 @@
           <div class="preamp-control">
             <div class="slider-label-row">
               <span class="toolbar-label">PREAMP GAIN</span>
-              <span class="gold-num" id="preampVal">-11.0 dB</span>
+              <span class="gold-num" id="preampVal">-5.5 dB</span>
             </div>
-            <input type="range" id="preampSlider" min="-32" max="15" step="0.5" value="-11.0" class="gold-range" />
+            <div class="headroom-toggle-row">
+              <button class="headroom-btn active" id="btnHeadroomDynamic" title="Loud streaming headroom (restores volume for music)">
+                <span class="headroom-tag">LOUD</span>
+                <span class="headroom-val" id="headroomDynamicVal">-5.5 dB</span>
+              </button>
+              <button class="headroom-btn" id="btnHeadroomStrict" title="Studio reference ceiling (strict 0 dBFS margin)">
+                <span class="headroom-tag">SAFE</span>
+                <span class="headroom-val" id="headroomStrictVal">-11.0 dB</span>
+              </button>
+            </div>
+            <input type="range" id="preampSlider" min="-32" max="15" step="0.5" value="-5.5" class="gold-range" />
           </div>
 
           <div class="hardware-sync-dock">
@@ -172,6 +188,11 @@
       </section>
 
     </main>
+
+    <!-- Studio Footer -->
+    <footer class="studio-footer">
+      <p class="footer-credit">Made with 🖤 by XBEAST ✨</p>
+    </footer>
 
     <!-- AutoEQ / Squiglink Import Modal -->
     <div class="modal-overlay" id="importModal" style="display: none;">

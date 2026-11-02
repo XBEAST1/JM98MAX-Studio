@@ -129,24 +129,9 @@ The studio includes the complete **XBEAST DSP Preset Suite** (Tier 2 Universal S
 
 ---
 
-### 3. Built-in Laptop / Mobile Speakers (`Rich Clarity`)
-* **Preamp:** `0.0 dB`
-* **Gains:** `32 Hz (+0.8), 64 Hz (+5.9), 125 Hz (+2.1), 250 Hz (+0.7), 500 Hz (+3.5), 1 kHz (+4.6), 2 kHz (+4.8), 4 kHz (+4.3), 8 kHz (+2.5), 16 kHz (0.0 dB)`
-* **Acoustic Design:** Enhances perceived fundamental warmth at 64 Hz and lifts vocal formants across 500 Hz – 4 kHz without overdriving miniature speaker transducers.
-
----
-
-## Quick Start & Usage
-
-### 1. Requirements
-* A Chromium-based browser supporting the **WebHID API**: Google Chrome, Brave, Microsoft Edge, or Arc (desktop versions on macOS, Windows, Linux, or ChromeOS).
-
-### 2. Operation
-1. Connect the **JCALLY JM98MAX** to your machine via USB-C.
-2. Open [`index.html`](index.html) in your browser.
-3. Click **Connect DAC** in the header and choose **JM98MAX** from the browser prompt.
-4. Select a preset tab (**IEMs**, **Headphones**, **Speakers**, or **Reference**) and click a preset pill.
-5. If **Auto-Sync** is active, adjustments immediately flash to the active DSP RAM.
+4. Select a preset tab (**IEMs**, **Headphones**, or **Reference**) and click a preset pill.
+5. Use the **Headroom Profile** toggle (**LOUD** vs **SAFE**) to quickly balance volume for everyday streaming music vs. strict studio test tones.
+6. If **Auto-Sync** is active, adjustments immediately flash to the active DSP RAM.
 
 ### 3. Importing Third-Party Presets
 Click **Import AutoEq** to parse standard text profiles exported from AutoEQ, Squiglink, Oratory1990, Crinacle, or Peace EQ. Supported syntax:
@@ -166,6 +151,7 @@ JM98MAX-Studio/
 ├── index.html     # Semantic UI layout and WebHID controls
 ├── styles.css     # Obsidian & champagne gold audiophile aesthetic
 ├── app.js         # WebHID communication, RBJ DSP math, and canvas engine
+├── favicon.svg    # Audiophile biquad response curve icon
 └── README.md      # Technical architecture and user guide
 ```
 
