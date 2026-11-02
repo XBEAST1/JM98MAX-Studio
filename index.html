@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JM98MAX Studio — Hardware DSP & 10-Band PEQ</title>
   <meta name="description" content="Hardware-safe 10-Band Parametric EQ & DSP Studio for JCALLY JM98MAX (CS43198 + Savitech Bridge) via WebHID." />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="alternate icon" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -94,9 +96,9 @@
           <div class="preamp-control">
             <div class="slider-label-row">
               <span class="toolbar-label">PREAMP GAIN</span>
-              <span class="gold-num" id="preampVal">0.0 dB</span>
+              <span class="gold-num" id="preampVal">-11.0 dB</span>
             </div>
-            <input type="range" id="preampSlider" min="-32" max="15" step="0.5" value="-3.5" class="gold-range" />
+            <input type="range" id="preampSlider" min="-32" max="15" step="0.5" value="-11.0" class="gold-range" />
           </div>
 
           <div class="hardware-sync-dock">

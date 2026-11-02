@@ -47,25 +47,25 @@ const XBEAST_PRESETS = {
   "iem-balanced": {
     name: "Balanced",
     category: "iems",
-    preamp: -2.0,
+    preamp: -9.0,
     gains: [2.6, 6.9, 5.7, 1.3, -2.2, -1.5, 2.3, -2.6, -0.8, 3.8]
   },
   "iem-punchy": {
     name: "Punchy Bass",
     category: "iems",
-    preamp: -3.5,
+    preamp: -11.0,
     gains: [4.3, 9.0, 6.5, 1.3, -2.2, -1.5, 2.3, -0.7, -0.5, 3.8]
   },
   "iem-heavy": {
     name: "Heavy Bass",
     category: "iems",
-    preamp: -6.0,
+    preamp: -14.0,
     gains: [12.0, 12.0, 12.0, 1.3, -2.2, -1.5, 2.3, 1.3, 1.8, 3.8]
   },
   "iem-extreme": {
     name: "Extreme Sub-Bass",
     category: "iems",
-    preamp: -10.0,
+    preamp: -22.0,
     gains: [15.0, 20.0, 17.0, 1.3, -2.2, -1.5, 2.3, 1.9, 3.0, 3.8]
   },
 
@@ -73,25 +73,25 @@ const XBEAST_PRESETS = {
   "hp-balanced": {
     name: "Balanced",
     category: "headphones",
-    preamp: -2.0,
+    preamp: -9.0,
     gains: [2.6, 6.9, 5.7, 1.3, -2.2, -1.5, 2.3, 0.2, -0.2, 3.8]
   },
   "hp-punchy": {
     name: "Punchy Bass",
     category: "headphones",
-    preamp: -3.5,
+    preamp: -11.0,
     gains: [4.3, 9.0, 6.5, 1.3, -2.2, -1.5, 2.3, 0.9, 1.0, 3.8]
   },
   "hp-heavy": {
     name: "Heavy Bass",
     category: "headphones",
-    preamp: -6.0,
+    preamp: -14.0,
     gains: [12.0, 12.0, 12.0, 1.3, -2.2, -1.5, 2.3, 2.7, 3.0, 3.8]
   },
   "hp-extreme": {
     name: "Extreme Sub-Bass",
     category: "headphones",
-    preamp: -10.0,
+    preamp: -22.0,
     gains: [15.0, 20.0, 17.0, 1.3, -2.2, -1.5, 2.3, 2.7, 3.0, 3.8]
   },
 
@@ -114,7 +114,7 @@ const XBEAST_PRESETS = {
 
 // --- Application State ---
 let currentBands = JSON.parse(JSON.stringify(DEFAULT_BANDS));
-let preampGain = -3.5; // Default to Punchy Bass listening headroom
+let preampGain = -11.0; // Default to Punchy Bass mathematical headroom (-11.0 dB)
 let activeDevice = null;
 let autoSyncEnabled = true;
 let syncDebounceTimer = null;

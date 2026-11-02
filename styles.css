@@ -768,33 +768,45 @@ input:checked + .switch-slider:before {
 .channel-q-row {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   width: 100%;
   justify-content: center;
 }
 
 .channel-q-label {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   color: var(--silver-dim);
 }
 
+/* Remove default stepper arrows on number input */
+.channel-q-input::-webkit-outer-spin-button,
+.channel-q-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .channel-q-input {
-  width: 42px;
+  -moz-appearance: textfield;
+  appearance: textfield;
+  width: 50px;
   background: #09090c;
   border: 1px solid var(--border-subtle);
-  color: var(--silver-medium);
+  color: var(--silver-bright);
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   text-align: center;
-  padding: 2px 2px;
+  padding: 3px 2px;
   border-radius: 4px;
   outline: none;
+  transition: all 0.2s var(--ease-smooth);
 }
 
 .channel-q-input:focus {
   border-color: var(--gold-primary);
   color: var(--gold-bright);
+  background: #121217;
+  box-shadow: 0 0 6px var(--gold-glow);
 }
 
 .btn-channel-mute {

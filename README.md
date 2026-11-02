@@ -96,7 +96,7 @@ The studio includes the complete **XBEAST DSP Preset Suite** (Tier 2 Universal S
 
 | Band | Frequency | Filter Shape | Q Factor | Balanced | Punchy Bass | Heavy Bass | Extreme Sub-Bass |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Preamp** | — | Headroom | — | **`-2.0 dB`** | **`-3.5 dB`** | **`-6.0 dB`** | **`-10.0 dB`** |
+| **Preamp** | — | Headroom | — | **`-9.0 dB`** | **`-11.0 dB`** | **`-14.0 dB`** | **`-22.0 dB`** |
 | **1** | **32 Hz** | Low Shelf | `1.00` | `+2.6 dB` | `+4.3 dB` | `+12.0 dB` | `+15.0 dB` |
 | **2** | **64 Hz** | Peak | `1.00` | `+6.9 dB` | `+9.0 dB` | `+12.0 dB` | `+20.0 dB` |
 | **3** | **125 Hz** | Peak | `1.00` | `+5.7 dB` | `+6.5 dB` | `+12.0 dB` | `+17.0 dB` |
@@ -115,7 +115,7 @@ The studio includes the complete **XBEAST DSP Preset Suite** (Tier 2 Universal S
 
 | Band | Frequency | Filter Shape | Q Factor | Balanced | Punchy Bass | Heavy Bass | Extreme Sub-Bass |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Preamp** | — | Headroom | — | **`-2.0 dB`** | **`-3.5 dB`** | **`-6.0 dB`** | **`-10.0 dB`** |
+| **Preamp** | — | Headroom | — | **`-9.0 dB`** | **`-11.0 dB`** | **`-14.0 dB`** | **`-22.0 dB`** |
 | **1** | **32 Hz** | Low Shelf | `1.00` | `+2.6 dB` | `+4.3 dB` | `+12.0 dB` | `+15.0 dB` |
 | **2** | **64 Hz** | Peak | `1.00` | `+6.9 dB` | `+9.0 dB` | `+12.0 dB` | `+20.0 dB` |
 | **3** | **125 Hz** | Peak | `1.00` | `+5.7 dB` | `+6.5 dB` | `+12.0 dB` | `+17.0 dB` |
