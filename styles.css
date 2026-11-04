@@ -165,9 +165,13 @@ body {
   width: 14px;
   height: 14px;
   fill: currentColor;
+  flex-shrink: 0;
+  display: block;
 }
 
 .github-heart {
+  display: inline-flex;
+  align-items: center;
   font-size: 0.78rem;
   line-height: 1;
 }
@@ -296,12 +300,16 @@ body {
 }
 
 .btn-micro {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: var(--bg-surface-elevated);
   border: 1px solid var(--border-subtle);
   color: var(--silver-medium);
   font-family: var(--font-sans);
   font-size: 0.72rem;
   font-weight: 500;
+  line-height: 1;
   padding: 5px 12px;
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -485,12 +493,16 @@ body {
 }
 
 .pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: var(--bg-surface-elevated);
   border: 1px solid var(--border-subtle);
   color: var(--silver-medium);
   font-family: var(--font-sans);
   font-size: 0.74rem;
   font-weight: 500;
+  line-height: 1;
   padding: 6px 14px;
   border-radius: 20px;
   cursor: pointer;
@@ -509,6 +521,55 @@ body {
   color: var(--gold-bright);
   font-weight: 600;
   box-shadow: 0 0 10px rgba(212, 175, 55, 0.15);
+}
+
+.custom-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 6px 5px 12px;
+}
+
+.pill-label {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.pill-del-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--silver-dim);
+  cursor: pointer;
+  transition: all 0.18s var(--ease-smooth);
+  flex-shrink: 0;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.pill-del-btn svg {
+  display: block;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.pill-del-btn:hover {
+  background: rgba(239, 68, 68, 0.35);
+  color: #ff9494;
+}
+
+.empty-preset-hint {
+  font-size: 0.74rem;
+  color: var(--silver-dim);
+  font-style: italic;
+  padding: 6px 4px;
 }
 
 .master-sliders-group {
@@ -1023,15 +1084,28 @@ input:checked + .switch-slider:before {
 }
 
 .btn-close {
-  background: none;
-  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid transparent;
   color: var(--silver-dim);
-  font-size: 1.4rem;
   cursor: pointer;
-  line-height: 1;
+  padding: 0;
+  transition: all 0.2s var(--ease-smooth);
+}
+
+.btn-close svg {
+  display: block;
+  pointer-events: none;
 }
 
 .btn-close:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border-medium);
   color: var(--silver-bright);
 }
 
@@ -1065,6 +1139,63 @@ input:checked + .switch-slider:before {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+}
+
+.save-modal-window {
+  width: 440px;
+}
+
+.save-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.save-input-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--silver-bright);
+}
+
+.studio-text-input {
+  width: 100%;
+  background: #09090c;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--silver-bright);
+  outline: none;
+  transition: border-color 0.2s var(--ease-smooth);
+}
+
+.studio-text-input:focus {
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+}
+
+.save-meta-preview {
+  display: flex;
+  gap: 14px;
+  padding: 10px 12px;
+  background: #0c0c10;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  margin-bottom: 18px;
+}
+
+.meta-tag {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--silver-dim);
+}
+
+.meta-tag strong {
+  color: var(--gold-bright);
 }
 
 /* --------------------------------------------------------------------------

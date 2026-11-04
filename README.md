@@ -129,11 +129,16 @@ The studio includes the complete **XBEAST DSP Preset Suite** (Tier 2 Universal S
 
 ---
 
-4. Select a preset tab (**IEMs**, **Headphones**, or **Reference**) and click a preset pill.
+4. Select a preset tab (**IEMs**, **Headphones**, **Custom**, or **Reference**) and click a preset pill.
 5. Use the **Headroom Profile** toggle (**LOUD** vs **SAFE**) to quickly balance volume for everyday streaming music vs. strict studio test tones.
 6. If **Auto-Sync** is active, adjustments immediately flash to the active DSP RAM.
 
-### 3. Importing Third-Party Presets
+### 3. Custom Presets & Local Storage
+* **Saving Profiles:** Adjust any of the 10 channel sliders or preamp gain, then click **`+ Save Preset`**. Enter a custom name to store your tuning in browser `localStorage`.
+* **Instant Switching:** Open the **Custom** category tab to browse and activate your stored presets. Switching triggers live WebHID RAM synchronization with zero latency.
+* **Management & Deletion:** Click the `×` button on any custom preset pill to remove it from storage.
+
+### 4. Importing Third-Party Presets
 Click **Import AutoEq** to parse standard text profiles exported from AutoEQ, Squiglink, Oratory1990, Crinacle, or Peace EQ. Supported syntax:
 ```text
 Preamp: -4.5 dB

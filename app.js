@@ -155,6 +155,15 @@ const btnCancelModal = document.getElementById("btnCancelModal");
 const btnApplyImport = document.getElementById("btnApplyImport");
 const importTextArea = document.getElementById("importTextArea");
 
+// Save Custom Preset Modal Elements
+const btnOpenSaveModal = document.getElementById("btnOpenSaveModal");
+const savePresetModal = document.getElementById("savePresetModal");
+const btnCloseSaveModal = document.getElementById("btnCloseSaveModal");
+const btnCancelSaveModal = document.getElementById("btnCancelSaveModal");
+const btnConfirmSavePreset = document.getElementById("btnConfirmSavePreset");
+const savePresetNameInput = document.getElementById("savePresetNameInput");
+const saveModalPreampVal = document.getElementById("saveModalPreampVal");
+
 // ==========================================================================
 // 1. DSP Math: Robert Bristow-Johnson (RBJ) Biquad Calculator
 // ==========================================================================
@@ -729,8 +738,146 @@ function updateAllBandsUI() {
 // 5. Presets, Categories & Import / Export
 // ==========================================================================
 
+// --- Custom Presets Engine (localStorage) ---
+const CUSTOM_STORAGE_KEY = "jm98max_custom_presets";
+
+function loadCustomPresets() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.warn("[JM98MAX] Corrupted custom presets in localStorage, falling back to empty:", err);
+    return [];
+  }
+}
+
+function saveCustomPreset(name, bands, preamp) {
+  const trimmedName = (name || "").trim().slice(0, 24);
+  if (!trimmedName) return null;
+
+  const presets = loadCustomPresets();
+  const id = "custom_" + Date.now();
+
+  const bandSnapshot = bands.map((b) => ({
+    index: b.index,
+    freq: b.freq,
+    gain: b.gain,
+    q: b.q,
+    type: b.type,
+    enabled: b.enabled !== false
+  }));
+
+  const existingIdx = presets.findIndex((p) => p.name.toLowerCase() === trimmedName.toLowerCase());
+  const newPreset = {
+    id: existingIdx >= 0 ? presets[existingIdx].id : id,
+    name: trimmedName,
+    category: "custom",
+    preamp: preamp,
+    dynamicPreamp: preamp,
+    createdAt: Date.now(),
+    bands: bandSnapshot
+  };
+
+  if (existingIdx >= 0) {
+    presets[existingIdx] = newPreset;
+  } else {
+    if (presets.length >= 50) presets.shift(); // Cap at 50 profiles
+    presets.push(newPreset);
+  }
+
+  try {
+    localStorage.setItem(CUSTOM_STORAGE_KEY, JSON.stringify(presets));
+  } catch (err) {
+    console.error("[JM98MAX] Could not save preset to localStorage:", err);
+    return null;
+  }
+
+  return newPreset;
+}
+
+function deleteCustomPreset(id) {
+  const presets = loadCustomPresets();
+  const filtered = presets.filter((p) => p.id !== id);
+  try {
+    localStorage.setItem(CUSTOM_STORAGE_KEY, JSON.stringify(filtered));
+  } catch (err) {
+    console.error("[JM98MAX] Could not delete preset from localStorage:", err);
+  }
+  return filtered;
+}
+
+function openSaveModal() {
+  if (!savePresetModal) return;
+  if (saveModalPreampVal) {
+    saveModalPreampVal.textContent = `${preampGain > 0 ? "+" : ""}${preampGain.toFixed(1)} dB`;
+  }
+  if (savePresetNameInput) {
+    savePresetNameInput.value = "";
+  }
+  savePresetModal.style.display = "flex";
+  setTimeout(() => savePresetNameInput && savePresetNameInput.focus(), 60);
+}
+
+function closeSaveModal() {
+  if (!savePresetModal) return;
+  savePresetModal.style.display = "none";
+}
+
+function handleConfirmSave() {
+  if (!savePresetNameInput) return;
+  const name = savePresetNameInput.value.trim();
+  if (!name) {
+    savePresetNameInput.focus();
+    return;
+  }
+
+  const saved = saveCustomPreset(name, currentBands, preampGain);
+  if (saved) {
+    closeSaveModal();
+    activeCategory = "custom";
+    applyPreset(saved.id);
+    showStatusAlert(`Saved preset "${saved.name}" to storage`, "success");
+  }
+}
+
 function renderPresetPills(category) {
   presetPillsContainer.innerHTML = "";
+
+  if (category === "custom") {
+    const customPresets = loadCustomPresets();
+    if (customPresets.length === 0) {
+      const hint = document.createElement("span");
+      hint.className = "empty-preset-hint";
+      hint.textContent = "No custom presets yet. Tune your EQ and click \"+ Save Preset\".";
+      presetPillsContainer.appendChild(hint);
+      return;
+    }
+
+    customPresets.forEach((preset) => {
+      const pill = document.createElement("button");
+      pill.className = `pill-btn custom-pill ${preset.id === activePresetKey ? "active" : ""}`;
+      pill.dataset.preset = preset.id;
+
+      const label = document.createElement("span");
+      label.className = "pill-label";
+      label.textContent = preset.name;
+      pill.appendChild(label);
+
+      const delBtn = document.createElement("span");
+      delBtn.className = "pill-del-btn";
+      delBtn.innerHTML = `<svg viewBox="0 0 10 10" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="2" y1="2" x2="8" y2="8"></line><line x1="8" y1="2" x2="2" y2="8"></line></svg>`;
+      delBtn.title = `Delete "${preset.name}"`;
+      delBtn.dataset.delId = preset.id;
+      delBtn.setAttribute("role", "button");
+      delBtn.setAttribute("aria-label", `Delete ${preset.name}`);
+      pill.appendChild(delBtn);
+
+      presetPillsContainer.appendChild(pill);
+    });
+    return;
+  }
 
   Object.entries(XBEAST_PRESETS).forEach(([key, preset]) => {
     if (preset.category !== category) return;
@@ -750,8 +897,15 @@ function updateHeadroomButtonsUI() {
 }
 
 function updateHeadroomLabels() {
-  const preset = XBEAST_PRESETS[activePresetKey];
+  let preset = null;
+  if (activePresetKey && activePresetKey.startsWith("custom_")) {
+    const customList = loadCustomPresets();
+    preset = customList.find((p) => p.id === activePresetKey);
+  } else {
+    preset = XBEAST_PRESETS[activePresetKey];
+  }
   if (!preset) return;
+
   const dyn = preset.dynamicPreamp !== undefined ? preset.dynamicPreamp : preset.preamp;
   const str = preset.preamp;
   if (headroomDynamicVal) headroomDynamicVal.textContent = `${dyn > 0 ? "+" : ""}${dyn.toFixed(1)} dB`;
@@ -763,7 +917,14 @@ function setHeadroomMode(mode) {
   localStorage.setItem("jm98max_headroom_mode", mode);
   updateHeadroomButtonsUI();
 
-  const preset = XBEAST_PRESETS[activePresetKey];
+  let preset = null;
+  if (activePresetKey && activePresetKey.startsWith("custom_")) {
+    const customList = loadCustomPresets();
+    preset = customList.find((p) => p.id === activePresetKey);
+  } else {
+    preset = XBEAST_PRESETS[activePresetKey];
+  }
+
   if (preset) {
     preampGain = (mode === "dynamic" && preset.dynamicPreamp !== undefined)
       ? preset.dynamicPreamp
@@ -776,32 +937,57 @@ function setHeadroomMode(mode) {
 }
 
 function applyPreset(presetKey) {
-  const preset = XBEAST_PRESETS[presetKey];
+  let preset = null;
+  let isCustom = false;
+
+  if (presetKey.startsWith("custom_")) {
+    const customList = loadCustomPresets();
+    preset = customList.find((p) => p.id === presetKey);
+    isCustom = true;
+  } else {
+    preset = XBEAST_PRESETS[presetKey];
+  }
+
   if (!preset) return;
 
   activePresetKey = presetKey;
-  activeCategory = preset.category;
+  activeCategory = isCustom ? "custom" : preset.category;
 
-  // Apply frequencies, Q, shapes, and gains
-  currentBands.forEach((b, i) => {
-    b.freq = DEFAULT_BANDS[i].freq;
-    b.type = DEFAULT_BANDS[i].type;
-    b.q = 1.00;
-    b.gain = preset.gains[i] ?? 0;
-    b.enabled = true;
-  });
+  if (isCustom && preset.bands) {
+    preset.bands.forEach((b, i) => {
+      if (currentBands[i]) {
+        currentBands[i].freq = b.freq;
+        currentBands[i].type = b.type;
+        currentBands[i].q = b.q;
+        currentBands[i].gain = b.gain;
+        currentBands[i].enabled = b.enabled !== false;
+      }
+    });
+    preampGain = preset.preamp;
+    renderChannelsGrid();
+  } else {
+    // Apply factory frequencies, Q, shapes, and gains
+    currentBands.forEach((b, i) => {
+      b.freq = DEFAULT_BANDS[i].freq;
+      b.type = DEFAULT_BANDS[i].type;
+      b.q = 1.00;
+      b.gain = preset.gains[i] ?? 0;
+      b.enabled = true;
+    });
 
-  // Apply listening preamp headroom based on active headroomMode
-  preampGain = (headroomMode === "dynamic" && preset.dynamicPreamp !== undefined)
-    ? preset.dynamicPreamp
-    : preset.preamp;
+    // Apply listening preamp headroom based on active headroomMode
+    preampGain = (headroomMode === "dynamic" && preset.dynamicPreamp !== undefined)
+      ? preset.dynamicPreamp
+      : preset.preamp;
+    updateAllBandsUI();
+  }
+
   preampSlider.value = preampGain;
   preampVal.textContent = `${preampGain > 0 ? "+" : ""}${preampGain.toFixed(1)} dB`;
 
   updateHeadroomLabels();
   updateHeadroomButtonsUI();
 
-  updateAllBandsUI();
   drawFrequencyResponse();
   triggerAutoSync();
 
@@ -1004,15 +1190,34 @@ function initApp() {
     renderPresetPills(activeCategory);
   });
 
-  // Preset Pills click
+  // Preset Pills click & deletion handling
   presetPillsContainer.addEventListener("click", (e) => {
+    const delBtn = e.target.closest(".pill-del-btn");
+    if (delBtn) {
+      e.stopPropagation();
+      const id = delBtn.dataset.delId;
+      const customPresets = loadCustomPresets();
+      const targetPreset = customPresets.find(p => p.id === id);
+      const name = targetPreset ? targetPreset.name : "this preset";
+      if (confirm(`Delete custom preset "${name}"?`)) {
+        deleteCustomPreset(id);
+        if (activePresetKey === id) {
+          applyPreset("iem-punchy");
+        } else {
+          renderPresetPills("custom");
+        }
+        showStatusAlert(`Deleted preset "${name}"`, "info");
+      }
+      return;
+    }
+
     const pill = e.target.closest(".pill-btn");
     if (pill && pill.dataset.preset) {
       applyPreset(pill.dataset.preset);
     }
   });
 
-  // Modal Handlers
+  // Modal Handlers (Import & Export)
   btnAutoEqImport.addEventListener("click", openImportModal);
   btnCloseModal.addEventListener("click", closeImportModal);
   btnCancelModal.addEventListener("click", closeImportModal);
@@ -1020,6 +1225,28 @@ function initApp() {
     parseAutoEqText(importTextArea.value);
   });
   btnExportJson.addEventListener("click", exportConfigJson);
+
+  // Save Custom Preset Modal Handlers
+  if (btnOpenSaveModal) btnOpenSaveModal.addEventListener("click", openSaveModal);
+  if (btnCloseSaveModal) btnCloseSaveModal.addEventListener("click", closeSaveModal);
+  if (btnCancelSaveModal) btnCancelSaveModal.addEventListener("click", closeSaveModal);
+  if (btnConfirmSavePreset) btnConfirmSavePreset.addEventListener("click", handleConfirmSave);
+  if (savePresetNameInput) {
+    savePresetNameInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleConfirmSave();
+      }
+    });
+  }
+
+  // Keyboard Escape listener for modals
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeImportModal();
+      closeSaveModal();
+    }
+  });
 
   // Resize listener
   window.addEventListener("resize", () => {

@@ -90,8 +90,10 @@
             <div class="category-tabs" id="categoryTabs">
               <button class="cat-tab active" data-cat="iems">IEMs</button>
               <button class="cat-tab" data-cat="headphones">Headphones</button>
+              <button class="cat-tab" data-cat="custom">Custom</button>
               <button class="cat-tab" data-cat="ref">Reference</button>
             </div>
+            <button class="btn-micro btn-gold-ghost" id="btnOpenSaveModal" title="Save current curve as a custom preset">+ Save Preset</button>
           </div>
           <div class="preset-pills" id="presetPillsContainer">
             <!-- Populated dynamically based on category -->
@@ -202,7 +204,9 @@
             <span class="gold-diamond">&diams;</span>
             <span>IMPORT AUTOEQ / SQUIGLINK PROFILE</span>
           </div>
-          <button class="btn-close" id="btnCloseModal">&times;</button>
+          <button class="btn-close" id="btnCloseModal" aria-label="Close">
+            <svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="2.5" y1="2.5" x2="9.5" y2="9.5"></line><line x1="9.5" y1="2.5" x2="2.5" y2="9.5"></line></svg>
+          </button>
         </div>
         <div class="modal-body">
           <p class="modal-instruction">
@@ -212,6 +216,38 @@
           <div class="modal-actions">
             <button id="btnCancelModal" class="btn-micro">Cancel</button>
             <button id="btnApplyImport" class="btn-gold-action">Parse & Load Profile</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save Custom Preset Modal -->
+    <div class="modal-overlay" id="savePresetModal" style="display: none;">
+      <div class="modal-window save-modal-window">
+        <div class="modal-header">
+          <div class="header-tag">
+            <span class="gold-diamond">&diams;</span>
+            <span>SAVE CUSTOM PRESET</span>
+          </div>
+          <button class="btn-close" id="btnCloseSaveModal" aria-label="Close">
+            <svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="2.5" y1="2.5" x2="9.5" y2="9.5"></line><line x1="9.5" y1="2.5" x2="2.5" y2="9.5"></line></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-instruction">
+            Save your current 10-band biquad EQ rack and preamp headroom to browser storage:
+          </p>
+          <div class="save-input-group">
+            <label for="savePresetNameInput" class="save-input-label">PRESET NAME</label>
+            <input type="text" id="savePresetNameInput" class="studio-text-input" placeholder="e.g. KZ Castor Punchy" maxlength="24" autocomplete="off" />
+          </div>
+          <div class="save-meta-preview">
+            <span class="meta-tag">Preamp: <strong id="saveModalPreampVal">-5.5 dB</strong></span>
+            <span class="meta-tag">Channels: <strong>10 Bands (96kHz Q30)</strong></span>
+          </div>
+          <div class="modal-actions">
+            <button id="btnCancelSaveModal" class="btn-micro">Cancel</button>
+            <button id="btnConfirmSavePreset" class="btn-gold-action">Save to Storage</button>
           </div>
         </div>
       </div>
