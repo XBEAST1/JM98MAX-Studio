@@ -48,7 +48,7 @@ const XBEAST_PRESETS = {
     name: "Balanced",
     category: "iems",
     preamp: -9.0,
-    dynamicPreamp: -4.0,
+    dynamicPreamp: -4.5,
     gains: [2.6, 6.9, 5.7, 1.3, -2.2, -1.5, 2.3, -2.6, -0.8, 3.8]
   },
   "iem-punchy": {
@@ -62,14 +62,14 @@ const XBEAST_PRESETS = {
     name: "Heavy Bass",
     category: "iems",
     preamp: -14.0,
-    dynamicPreamp: -6.5,
+    dynamicPreamp: -7.0,
     gains: [12.0, 12.0, 12.0, 1.3, -2.2, -1.5, 2.3, 1.3, 1.8, 3.8]
   },
   "iem-extreme": {
     name: "Extreme Sub-Bass",
     category: "iems",
     preamp: -22.0,
-    dynamicPreamp: -8.0,
+    dynamicPreamp: -11.0,
     gains: [15.0, 20.0, 17.0, 1.3, -2.2, -1.5, 2.3, 1.9, 3.0, 3.8]
   },
 
@@ -78,7 +78,7 @@ const XBEAST_PRESETS = {
     name: "Balanced",
     category: "headphones",
     preamp: -9.0,
-    dynamicPreamp: -4.0,
+    dynamicPreamp: -4.5,
     gains: [2.6, 6.9, 5.7, 1.3, -2.2, -1.5, 2.3, 0.2, -0.2, 3.8]
   },
   "hp-punchy": {
@@ -92,14 +92,14 @@ const XBEAST_PRESETS = {
     name: "Heavy Bass",
     category: "headphones",
     preamp: -14.0,
-    dynamicPreamp: -6.5,
+    dynamicPreamp: -7.0,
     gains: [12.0, 12.0, 12.0, 1.3, -2.2, -1.5, 2.3, 2.7, 3.0, 3.8]
   },
   "hp-extreme": {
     name: "Extreme Sub-Bass",
     category: "headphones",
     preamp: -22.0,
-    dynamicPreamp: -8.0,
+    dynamicPreamp: -11.0,
     gains: [15.0, 20.0, 17.0, 1.3, -2.2, -1.5, 2.3, 2.7, 3.0, 3.8]
   },
 
@@ -769,13 +769,18 @@ function saveCustomPreset(name, bands, preamp) {
     enabled: b.enabled !== false
   }));
 
+  // If the user saved while in LOUD mode, the current preamp slider is already the half value.
+  // The safe preamp ceiling is preamp * 2. If in SAFE mode, preamp is already the safe ceiling.
+  const safePreamp = headroomMode === "dynamic" ? Math.round((preamp * 2) * 2) / 2 : preamp;
+  const loudPreamp = Math.round((safePreamp / 2) * 2) / 2;
+
   const existingIdx = presets.findIndex((p) => p.name.toLowerCase() === trimmedName.toLowerCase());
   const newPreset = {
     id: existingIdx >= 0 ? presets[existingIdx].id : id,
     name: trimmedName,
     category: "custom",
-    preamp: preamp,
-    dynamicPreamp: preamp,
+    preamp: safePreamp,
+    dynamicPreamp: loudPreamp,
     createdAt: Date.now(),
     bands: bandSnapshot
   };
@@ -896,18 +901,28 @@ function updateHeadroomButtonsUI() {
   btnHeadroomStrict.classList.toggle("active", headroomMode === "strict");
 }
 
+function getPresetPreamp(preset, mode = headroomMode) {
+  if (!preset) return preampGain;
+  const safeDb = typeof preset.preamp === "number" ? preset.preamp : 0.0;
+  if (mode === "strict") return safeDb;
+  // LOUD mode: exactly half of safe preamp dB (e.g. -11 dB -> -5.5 dB)
+  return Math.round((safeDb / 2) * 2) / 2;
+}
+
 function updateHeadroomLabels() {
   let preset = null;
   if (activePresetKey && activePresetKey.startsWith("custom_")) {
     const customList = loadCustomPresets();
     preset = customList.find((p) => p.id === activePresetKey);
-  } else {
+  } else if (activePresetKey) {
     preset = XBEAST_PRESETS[activePresetKey];
   }
-  if (!preset) return;
 
-  const dyn = preset.dynamicPreamp !== undefined ? preset.dynamicPreamp : preset.preamp;
-  const str = preset.preamp;
+  const str = preset && typeof preset.preamp === "number"
+    ? preset.preamp
+    : (headroomMode === "strict" ? preampGain : Math.round((preampGain * 2) * 2) / 2);
+  const dyn = Math.round((str / 2) * 2) / 2;
+
   if (headroomDynamicVal) headroomDynamicVal.textContent = `${dyn > 0 ? "+" : ""}${dyn.toFixed(1)} dB`;
   if (headroomStrictVal) headroomStrictVal.textContent = `${str > 0 ? "+" : ""}${str.toFixed(1)} dB`;
 }
@@ -921,19 +936,26 @@ function setHeadroomMode(mode) {
   if (activePresetKey && activePresetKey.startsWith("custom_")) {
     const customList = loadCustomPresets();
     preset = customList.find((p) => p.id === activePresetKey);
-  } else {
+  } else if (activePresetKey) {
     preset = XBEAST_PRESETS[activePresetKey];
   }
 
   if (preset) {
-    preampGain = (mode === "dynamic" && preset.dynamicPreamp !== undefined)
-      ? preset.dynamicPreamp
-      : preset.preamp;
-    preampSlider.value = preampGain;
-    preampVal.textContent = `${preampGain > 0 ? "+" : ""}${preampGain.toFixed(1)} dB`;
-    drawFrequencyResponse();
-    triggerAutoSync();
+    preampGain = getPresetPreamp(preset, mode);
+  } else {
+    // If no preset active, halve or double based on direction
+    if (mode === "dynamic") {
+      preampGain = Math.round((preampGain / 2) * 2) / 2;
+    } else {
+      preampGain = Math.round((preampGain * 2) * 2) / 2;
+    }
   }
+
+  preampSlider.value = preampGain;
+  preampVal.textContent = `${preampGain > 0 ? "+" : ""}${preampGain.toFixed(1)} dB`;
+  updateHeadroomLabels();
+  drawFrequencyResponse();
+  triggerAutoSync();
 }
 
 function applyPreset(presetKey) {
@@ -963,7 +985,7 @@ function applyPreset(presetKey) {
         currentBands[i].enabled = b.enabled !== false;
       }
     });
-    preampGain = preset.preamp;
+    preampGain = getPresetPreamp(preset, headroomMode);
     renderChannelsGrid();
   } else {
     // Apply factory frequencies, Q, shapes, and gains
@@ -975,10 +997,8 @@ function applyPreset(presetKey) {
       b.enabled = true;
     });
 
-    // Apply listening preamp headroom based on active headroomMode
-    preampGain = (headroomMode === "dynamic" && preset.dynamicPreamp !== undefined)
-      ? preset.dynamicPreamp
-      : preset.preamp;
+    // Apply listening preamp headroom based on active headroomMode (exact half in LOUD)
+    preampGain = getPresetPreamp(preset, headroomMode);
     updateAllBandsUI();
   }
 
@@ -1040,9 +1060,12 @@ function parseAutoEqText(text) {
     currentBands[i].enabled = parsedFilters[i].enabled;
   }
 
-  preampGain = Math.max(-32, Math.min(15, newPreamp));
+  const importedSafe = Math.max(-32, Math.min(15, newPreamp));
+  preampGain = headroomMode === "dynamic" ? Math.round((importedSafe / 2) * 2) / 2 : importedSafe;
   preampSlider.value = preampGain;
   preampVal.textContent = `${preampGain > 0 ? "+" : ""}${preampGain.toFixed(1)} dB`;
+  activePresetKey = null;
+  updateHeadroomLabels();
 
   renderChannelsGrid();
   drawFrequencyResponse();
