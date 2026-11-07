@@ -123,6 +123,7 @@ let draggingNodeIndex = null;
 let activeCategory = "iems";
 let activePresetKey = "iem-punchy";
 let headroomMode = localStorage.getItem("jm98max_headroom_mode") || "dynamic"; // "dynamic" (Loud) or "strict" (Safe)
+let antiSleepEnabled = localStorage.getItem("jm98max_anti_sleep") === "true";
 
 // --- DOM References ---
 const btnConnect = document.getElementById("btnConnect");
@@ -140,6 +141,7 @@ const btnHeadroomStrict = document.getElementById("btnHeadroomStrict");
 const headroomDynamicVal = document.getElementById("headroomDynamicVal");
 const headroomStrictVal = document.getElementById("headroomStrictVal");
 const autoSyncCheck = document.getElementById("autoSyncCheck");
+const antiSleepCheck = document.getElementById("antiSleepCheck");
 const btnSyncRam = document.getElementById("btnSyncRam");
 const btnResetCurve = document.getElementById("btnResetCurve");
 const channelsContainer = document.getElementById("channelsContainer");
@@ -1152,6 +1154,79 @@ function openImportModal() { importModal.style.display = "flex"; }
 function closeImportModal() { importModal.style.display = "none"; }
 
 // ==========================================================================
+// 6. Anti-Sleep Keep-Alive Engine (0ms Instant Playback)
+// ==========================================================================
+
+let antiSleepCtx = null;
+let antiSleepSource = null;
+
+function enableAntiSleep() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+
+    if (!antiSleepCtx) {
+      antiSleepCtx = new AudioCtx();
+    }
+    if (antiSleepCtx.state === "suspended") {
+      antiSleepCtx.resume();
+    }
+    if (antiSleepSource) {
+      try { antiSleepSource.stop(); antiSleepSource.disconnect(); } catch (e) {}
+      antiSleepSource = null;
+    }
+
+    // 1-second looping buffer of alternating sub-LSB impulses (-114 dBFS at Nyquist).
+    // Physically inaudible to human ears on any IEM, but continuously provides non-zero samples
+    // to the Cirrus Logic CS43198 Zero-Detect Auto-Mute circuit. Keeps the analog stage 100% active
+    // and eliminates the half-second delay or soft-ramp fade-in when starting audio.
+    const sampleRate = antiSleepCtx.sampleRate || 48000;
+    const buffer = antiSleepCtx.createBuffer(1, sampleRate, sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < sampleRate; i++) {
+      data[i] = (i % 2 === 0 ? 1 : -1) * 0.000002;
+    }
+
+    antiSleepSource = antiSleepCtx.createBufferSource();
+    antiSleepSource.buffer = buffer;
+    antiSleepSource.loop = true;
+    antiSleepSource.connect(antiSleepCtx.destination);
+    antiSleepSource.start();
+    showStatusAlert("Anti-Sleep active: DAC output stage will stay awake with 0ms instant playback", "info");
+  } catch (err) {
+    console.warn("[JM98MAX] Anti-Sleep initialization error:", err);
+  }
+}
+
+function disableAntiSleep() {
+  if (antiSleepSource) {
+    try {
+      antiSleepSource.stop();
+      antiSleepSource.disconnect();
+    } catch (e) {}
+    antiSleepSource = null;
+  }
+  if (antiSleepCtx && antiSleepCtx.state === "running") {
+    try {
+      antiSleepCtx.suspend();
+    } catch (e) {}
+  }
+  showStatusAlert("Anti-Sleep disabled", "info");
+}
+
+function setAntiSleep(enabled) {
+  antiSleepEnabled = enabled;
+  localStorage.setItem("jm98max_anti_sleep", enabled ? "true" : "false");
+  if (antiSleepCheck) antiSleepCheck.checked = enabled;
+
+  if (enabled) {
+    enableAntiSleep();
+  } else {
+    disableAntiSleep();
+  }
+}
+
+// ==========================================================================
 // 7. Initialization & Event Wire-Up
 // ==========================================================================
 
@@ -1173,6 +1248,7 @@ function initApp() {
 
   // Connect Button
   btnConnect.addEventListener("click", () => {
+    if (antiSleepEnabled) enableAntiSleep();
     if (activeDevice) {
       activeDevice.close();
       setDeviceStatus(false);
@@ -1180,6 +1256,21 @@ function initApp() {
       connectDac();
     }
   });
+
+  // Anti-Sleep Toggle & Keep-Alive event wiring
+  if (antiSleepCheck) {
+    antiSleepCheck.checked = antiSleepEnabled;
+    antiSleepCheck.addEventListener("change", (e) => {
+      setAntiSleep(e.target.checked);
+    });
+  }
+
+  // Resume Web Audio Keep-Alive on first user interaction if enabled
+  window.addEventListener("click", () => {
+    if (antiSleepEnabled && (!antiSleepCtx || antiSleepCtx.state !== "running")) {
+      enableAntiSleep();
+    }
+  }, { once: true });
 
   // Preamp slider
   preampSlider.addEventListener("input", (e) => {

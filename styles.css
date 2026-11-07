@@ -711,6 +711,8 @@ body {
   display: flex;
   align-items: center;
   gap: 16px;
+  row-gap: 8px;
+  flex-wrap: wrap;
 }
 
 .toggle-group {
